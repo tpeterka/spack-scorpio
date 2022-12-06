@@ -9,14 +9,15 @@ from spack import *
 class Scorpio(CMakePackage):
     """Software for Caching Output and Reads for Parallel I/O (SCORPIO)"""
 
-    homepage = "https://github.com/E3SM-Project/scorpio.git"
-    url      = "https://github.com/E3SM-Project/scorpio.git"
-    git      = "https://github.com/E3SM-Project/scorpio.git"
+    # TODO: change tpeterka to E3SM-Project (using a fork for testing)
+    homepage = "https://github.com/tpeterka/scorpio.git"
+    url      = "https://github.com/tpeterka/scorpio.git"
+    git      = "https://github.com/tpeterka/scorpio.git"
 
     version('master', branch='master')
 
-    depends_on('mpich@4.0.2+fortran device=ch3')
-    depends_on('hdf5@1.12.1', type='link')
+    depends_on('mpich@4.0.2 device=ch3')
+    depends_on('hdf5+mpi+hl@1.12.1', type='link')
     depends_on('netcdf-c@4.8.1 +mpi', type='link')
     depends_on('parallel-netcdf@1.12.2 -shared', type='link')
     depends_on('zlib', type='link')
@@ -27,9 +28,9 @@ class Scorpio(CMakePackage):
     variant("examples", default=False, description="Build examples")
 
     def cmake_args(self):
-        args = ['-DCMAKE_C_COMPILER=%s' % self.spec['mpi'].mpicc,
-                '-DCMAKE_CXX_COMPILER=%s' % self.spec['mpi'].mpicxx,
-                '-DCMAKE_FC_COMPILER=%s' % self.spec['mpi'].mpifort,
+        args = ['-DCMAKE_C_COMPILER=%s' % self.spec['mpich'].mpicc,
+                '-DCMAKE_CXX_COMPILER=%s' % self.spec['mpich'].mpicxx,
+                '-DCMAKE_FC_COMPILER=%s' % self.spec['mpich'].mpifc,
                 '-DBUILD_SHARED_LIBS=true',
                 '-DPIO_USE_MALLOC=true',
                 '-DCMAKE_C_FLAGS=-fPIC',
@@ -37,5 +38,9 @@ class Scorpio(CMakePackage):
                 self.define_from_variant("WITH_NETCDF", "netcdf"),
                 self.define_from_variant("WITH_HDF5", "hdf5"),
                 self.define_from_variant("PIO_ENABLE_TESTS", "tests"),
-                self.define_from_variant("PIO_ENABLE_EXAMPLES", "tests")]
+                self.define_from_variant("PIO_ENABLE_EXAMPLES", "tests"),
+                #'-DHDF5_ROOT=%s' % self.spec['hdf5'].prefix,
+                '-DCMAKE_PREFIX_PATH=%s' % self.spec['hdf5'].prefix]
+                #'-DCMAKE_FIND_USE_PACKAGE_ROOT_PATH=true']
+
         return args
