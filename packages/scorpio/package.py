@@ -9,18 +9,27 @@ from spack import *
 class Scorpio(CMakePackage):
     """Software for Caching Output and Reads for Parallel I/O (SCORPIO)"""
 
-    # TODO: change tpeterka to E3SM-Project (using a fork for testing)
-    homepage = "https://github.com/tpeterka/scorpio.git"
-    url      = "https://github.com/tpeterka/scorpio.git"
-    git      = "https://github.com/tpeterka/scorpio.git"
+    # this is the actual public repo of the E3SM-Project (use this)
+    homepage = "https://github.com/E3SM-Project/scorpio.git"
+    url      = "https://github.com/E3SM-Project/scorpio.git"
+    git      = "https://github.com/E3SM-Project/scorpio.git"
+
+    # the following uses my fork for testing
+    #homepage = "https://github.com/tpeterka/scorpio.git"
+    #url      = "https://github.com/tpeterka/scorpio.git"
+    #git      = "https://github.com/tpeterka/scorpio.git"
+
+    # the following uses my local repo (for debugging)
+    #homepage = "/home/tpeterka/software/tpeterka-scorpio"
+    #url      = "/home/tpeterka/software/tpeterka-scorpio"
+    #git      = "/home/tpeterka/software/tpeterka-scorpio"
 
     version('master', branch='master')
 
     depends_on('mpich@4.0.2 device=ch3')
-    depends_on('hdf5+mpi+hl@1.12.1', type='link')
-    depends_on('netcdf-c@4.8.1 +mpi', type='link')
+    depends_on('hdf5+mpi+hl@1.12.1 ^mpich', type='link')
+    depends_on('netcdf-c@4.8.1 +mpi ^mpich', type='link')
     depends_on('parallel-netcdf@1.12.2 -shared', type='link')
-    depends_on('zlib', type='link')
 
     variant("netcdf", default=True, description="Build with NetCDF")
     variant("hdf5", default=False, description="Build with HDF5")
@@ -35,12 +44,13 @@ class Scorpio(CMakePackage):
                 '-DPIO_USE_MALLOC=true',
                 '-DCMAKE_C_FLAGS=-fPIC',
                 '-DCMAKE_CXX_FLAGS=-fPIC',
+                '-DPIO_ENABLE_TIMING=false',
                 self.define_from_variant("WITH_NETCDF", "netcdf"),
                 self.define_from_variant("WITH_HDF5", "hdf5"),
                 self.define_from_variant("PIO_ENABLE_TESTS", "tests"),
                 self.define_from_variant("PIO_ENABLE_EXAMPLES", "tests"),
-                #'-DHDF5_ROOT=%s' % self.spec['hdf5'].prefix,
-                '-DCMAKE_PREFIX_PATH=%s' % self.spec['hdf5'].prefix]
-                #'-DCMAKE_FIND_USE_PACKAGE_ROOT_PATH=true']
+                '-DHDF5_PATH=%s' % self.spec['hdf5'].prefix,
+                '-DNetCDF_PATH=%s' % self.spec['netcdf-c'].prefix,
+                '-DPnetCDF_PATH=%s' % self.spec['parallel-netcdf'].prefix]
 
         return args
